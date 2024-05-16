@@ -5,7 +5,7 @@
 
       <!-- 타이틀 이미지 -->
       <div class="mb-5" style="margin:0; padding:0;">
-        <img :src="post.postImages && post.postImages.length > 0 ? post.postImages[0] : ''" width="100%">
+        <img :src="post.postImages && post.postImages.length > 0 ? post.postImages[0] : ''" width="80%">
       </div>
 
       <div style="text-align:left;">
@@ -22,7 +22,7 @@
 
       <!-- 본문 이미지 -->
       <div class="mb-3" v-if="post.postImages && post.postImages.length > 1">
-        <img v-for="(image, index) in post.postImages.slice(1)" :key="index" :src="image" width="100%">
+        <img v-for="(image, index) in post.postImages.slice(1)" :key="index" :src="image" width="80%">
       </div>
 
       <div class="col d-flex text-end mt-3 mb-5">

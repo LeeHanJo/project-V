@@ -25,6 +25,7 @@
           <!-- 테이블 헤더 -->
           <thead>
             <tr>
+              <th scope="col">선택</th> <!-- 체크박스를 추가한 열 -->
               <th scope="col">번호</th>
               <th scope="col">제목</th>
               <th scope="col">카테고리</th>
@@ -37,10 +38,16 @@
           <tbody style="background-color: white;">
             <tr v-for="(post, index) in postList" :key="index">
               <td>
+                <!-- 체크박스 추가 -->
+                <div style="padding: 10px 0;">
+                <input type="checkbox" :id="'postCheckbox_' + index" v-model="selectedPosts" :value="post.postId" class="form-check-input">
+                </div>
+              </td>
+              <td>
                 <div style="padding: 10px 0;">{{ post.postId }}</div>
               </td>
               <td>
-                <div style="padding: 10px 0; text-align:left;">
+                <div style="padding: 10px 0; text-align:center;">
                   <router-link style="text-decoration: none; color: black; font-weight: bold; font-size: 16px; cursor: pointer; text-decoration: underline;" :to="`read/${post.postId}`" @mouseover="onMouseOver" @mouseleave="onMouseLeave">{{ post.postTitle }}</router-link>
                 </div>
               </td>
@@ -84,12 +91,18 @@
         </table>
       </div>
       <!-- 페이지네이션 -->
-      <div class="d-flex justify-content-center mt-3 mb-3">
+      <div class="mt-3 mb-3">
+        <div class="d-flex justify-content-start">
+          <button class="btn btn-dark" @click="selectAllPosts" style="color:white; margin-right: 10px;"><b>전체선택</b></button>
+          <button class="btn btn-outline-dark" @click="deleteSelected"><b>삭제</b></button>
+        </div>
+        <div class="d-flex justify-content-center">
         <button class="btn btn-white mr-2" @click="prevPage" :disabled="currentPage === 0">이전</button>
         <div v-for="pageNumber in totalPages" :key="pageNumber">
-          <button class="btn btn-white mr-2" @click="goToPage(pageNumber)" :class="{ 'btn-white': currentPage === pageNumber }">{{ pageNumber }}</button>
+          <button class="btn btn-white mr-2" @click="goToPage(pageNumber)" :style="{ 'font-weight': currentPage + 1 === pageNumber ? 'bold' : 'normal' }">{{ pageNumber }}</button>
         </div>
         <button class="btn btn-white" @click="nextPage" :disabled="currentPage === totalPages -1">다음</button>
+      </div>
       </div>
     </div>
   </main>
@@ -110,6 +123,8 @@ export default {
       itemsPerPage: 10,
       selectedCategory: '전체', // 선택된 카테고리를 저장하는 변수 추가
       // modalVisible: false, // 모달의 표시 여부
+      allSelected: false, // 모든 항목이 선택되었는지 여부를 추적
+      selectedPosts: [], // 선택된 게시물 ID를 저장하는 배열
     };
   },
   mounted() {
@@ -197,19 +212,51 @@ export default {
         console.error('게시물 삭제 실패:', error);
       }
     },
-    //  showModal(postId) {
-    //   this.postIdToDelete = postId; // postId 저장
-    //   this.modalVisible = true; // 모달 표시
-    // },
-    // hideModal() {
-    //   this.modalVisible = false; // 모달 숨김
-    // },
-    // deletePostAndHideModal() {
-    //   this.deletePost(this.postIdToDelete);
-    //   this.hideModal(); // 모달 숨김
-    // },
-
-    
+    // 모든 항목을 선택하거나 선택 해제합니다.
+  selectAllPosts() {
+  if (!this.allSelected) {
+    // 전체 선택 버튼을 클릭한 경우 모든 항목을 선택합니다.
+    this.selectedPosts = this.postList.map(post => post.postId);
+  } else {
+    // 이미 모든 항목이 선택된 상태이면 선택을 해제합니다.
+    this.selectedPosts = [];
+  }
+  // 전체 선택 상태를 업데이트합니다.
+  this.allSelected = !this.allSelected;
+},
+  // 선택된 항목을 삭제합니다.
+  async deleteSelected() {
+    // 선택된 게시물이 있는지 확인
+  if (this.selectedPosts.length === 0) {
+    // 선택된 게시물이 없는 경우 알림 표시
+    alert('삭제할 게시물을 선택해주세요.');
+    return; // 함수 종료
+  }
+    // 선택된 게시물이 있는 경우 삭제 확인 대화 상자 표시
+    const confirmDelete = confirm('정말로 선택된 게시물을 삭제하시겠습니까?');
+    if (confirmDelete) {
+      try {
+        const accessToken = localStorage.getItem('accessToken');
+        // 선택된 게시물 ID를 반복하며 각각을 삭제합니다.
+        await Promise.all(this.selectedPosts.map(async postId => {
+          const url = `http://localhost:8080/api/v1/posts/post/${postId}`;
+          await axios.delete(url, {
+            headers: {
+              'Authorization': `Bearer ${accessToken}`
+            }
+          });
+        }));
+        // 성공 메시지를 표시합니다.
+        alert('선택된 게시물이 성공적으로 삭제되었습니다.');
+        // 게시물 목록을 새로고침합니다.
+        await this.axiosAdminPostList(this.selectedCategory);
+        // 선택된 항목을 초기화합니다.
+        this.selectedPosts = [];
+      } catch (error) {
+        console.error('게시물 삭제 실패:', error);
+      }
+    }
+},
     onMouseOver(event) {
       event.target.style.color = 'blue'; // 마우스를 올렸을 때 색상 변경
     },

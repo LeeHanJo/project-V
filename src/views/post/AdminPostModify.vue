@@ -91,66 +91,12 @@
         <div class="col-md-8 offset-md-2 d-flex justify-content-center">
           <router-link to="/admin/post/list" class="btn btn-lg btn-primary me-3">목록으로</router-link>
           <!-- 수정하기 버튼에 savePost 메서드 연결 -->
-          <button type="button" class="btn btn-lg btn-primary me-3" @click="showModifyModal">수정완료</button>
-          <button type="button" class="btn btn-lg btn-danger" @click="showDeleteModal">삭제하기</button>
+          <button type="button" class="btn btn-lg btn-primary me-3" @click="confirmModifyPost">수정완료</button>
+          <button type="button" class="btn btn-lg btn-danger" @click="confirmDeletePost">삭제하기</button>
         </div>
       </div>
     </div>
   </main>
-  <!-- 수정 모달 -->
-    <div v-if="modifyModalVisible" class="modal fade show" tabindex="-1" role="dialog" style="display: block; background-color: rgba(0, 0, 0, 0.5);">
-      <div class="modal-dialog" role="document">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title">게시물 수정</h5>
-            <button type="button" class="btn-close" aria-label="Close" @click="hideModal"></button>
-          </div>
-          <div class="modal-body">
-            <p>게시물을 수정하시겠습니까?</p>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" @click="hideModal">취소</button>
-            <button type="button" class="btn btn-primary" @click="modifyPostAndHideModal">수정</button>
-          </div>
-        </div>
-      </div>
-    </div>
-    <!-- 삭제 모달 -->
-    <div v-if="deleteModalVisible" class="modal fade show" tabindex="-1" role="dialog" style="display: block; background-color: rgba(0, 0, 0, 0.5);">
-      <div class="modal-dialog" role="document">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title">게시물 삭제</h5>
-            <button type="button" class="btn-close" aria-label="Close" @click="hideModaldelete"></button>
-          </div>
-          <div class="modal-body">
-            <p>게시물을 삭제하시겠습니까?</p>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" @click="hideModaldelete">취소</button>
-            <button type="button" class="btn btn-danger" @click="deletePostAndHideModal">삭제</button>
-          </div>
-        </div>
-      </div>
-    </div>
-    <!-- 삭제 이미지 모달 -->
-<div v-if="deleteModalImageVisible" class="modal fade show" tabindex="-1" role="dialog" style="display: block; background-color: rgba(0, 0, 0, 0.5);">
-  <div class="modal-dialog" role="document">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title">이미지 삭제 확인</h5>
-        <button type="button" class="btn-close" aria-label="Close" @click="hideDeleteImageModal"></button>
-      </div>
-      <div class="modal-body">
-        <p>이미지를 삭제하시겠습니까?</p>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" @click="hideDeleteImageModal">취소</button>
-        <button type="button" class="btn btn-danger confirm-delete-btn" @click="confirmDeleteImage">삭제</button>
-      </div>
-    </div>
-  </div>
-</div>
 </template>
 
 <script>
@@ -279,41 +225,22 @@ export default {
       } catch (error) {
         console.error('게시물 삭제 실패:', error);
       }
-    //  수정모달
     },
-    showModifyModal() {
-      this.modifyModalVisible  = true; // 모달 표시
-    },
-    hideModal() {
-      this.modifyModalVisible  = false; // 모달 숨김
-    },
-    modifyPostAndHideModal() {
-    if (this.imageFile && this.imageFile.length > 0) { // 이미지를 등록한 경우에만 업로드 수행
-      this.uploadImage(this.postId); // 이미지 저장
-    }
+
+    confirmModifyPost() {
+      if (confirm('정말로 이 게시글을 수정하시겠습니까?')) {
+        if (this.imageFile && this.imageFile.length > 0) { // 이미지를 등록한 경우에만 업로드 수행
+          this.uploadImage(this.postId); // 이미지 저장
+        }
       this.modifyPost(); // 게시물 저장
-      this.hideModal(); // 모달 숨김
+      }
     },
-    //  삭제모달
-    showDeleteModal() {
-      this.deleteModalVisible  = true; // 모달 표시
+    confirmDeletePost() {
+      if (confirm('정말로 이 게시글을 삭제하시겠습니까?')) {
+        this.deletePost(); // 게시물 삭제
+      }
     },
-    hideModaldelete() {
-      this.deleteModalVisible  = false; // 모달 숨김
-    },
-    deletePostAndHideModal() {
-      this.deletePost(); // 게시물 삭제
-      this.hideModal(); // 모달 숨김
-    },
-    showDeleteImageModal() {  // 이미지 삭제 모달
-    this.deleteModalImageVisible = true;
-    },
-    confirmDeleteImage(){
-    this.deleteModalImageVisible = false;
-    },
-    hideDeleteImageModal(){
-    this.deleteModalImageVisible = false;
-    },
+
     handleImageUpload(event) {
       // 선택된 파일이 있는지 확인
     if (event.target.files && event.target.files.length > 0) {
@@ -389,17 +316,9 @@ export default {
   try {
     event.preventDefault(); // 기본 동작 방지
 
-    // 모달을 띄웁니다.
-    this.showDeleteImageModal();
-
-    // 모달에서 "삭제" 버튼을 누를 때 이미지를 삭제합니다.
-    const confirmDelete = await new Promise((resolve, reject) => {
-      this.$nextTick(() => {
-        const confirmButton = document.querySelector('.btn-danger.confirm-delete-btn');
-        confirmButton.addEventListener('click', () => resolve(true));
-      });
-    });
-
+    // 확인 창을 표시하고 사용자가 "확인"을 선택했는지 확인합니다.
+    const confirmDelete = confirm('정말로 이미지를 삭제하시겠습니까?');
+    
     if (confirmDelete) {
       // postImageId를 사용하여 이미지를 삭제합니다.
       const accessToken = localStorage.getItem('accessToken');

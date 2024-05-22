@@ -70,7 +70,7 @@
                         <span><i class="fa-solid fa-gear" style="padding:0.5rem"></i></span>
                       </router-link></li>
                       <li><hr class="dropdown-divider"></li>
-                      <li><a @click="showModal(post.postId)" class="dropdown-item" href="#">게시물 삭제
+                      <li><a @click="deletePost(post.postId)" class="dropdown-item" href="#">게시물 삭제
                       <span><i class="fa-solid fa-trash-can" style="padding:0.5rem"></i></span>
                       </a></li>
                     </ul>
@@ -93,24 +93,6 @@
       </div>
     </div>
   </main>
-  <!-- 모달 -->
-    <div v-if="modalVisible" class="modal fade show" tabindex="-1" role="dialog" style="display: block; background-color: rgba(0, 0, 0, 0.5);">
-      <div class="modal-dialog" role="document">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title">게시물 삭제</h5>
-            <button type="button" class="btn-close" aria-label="Close" @click="hideModal"></button>
-          </div>
-          <div class="modal-body">
-            <p>게시물을 삭제하시겠습니까?</p>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" @click="hideModal">취소</button>
-            <button type="button" class="btn btn-danger" @click="deletePostAndHideModal()">삭제</button>
-          </div>
-        </div>
-      </div>
-    </div>
 </template>
 
 <script>
@@ -127,7 +109,7 @@ export default {
       totalPages: 0,
       itemsPerPage: 10,
       selectedCategory: '전체', // 선택된 카테고리를 저장하는 변수 추가
-      modalVisible: false, // 모달의 표시 여부
+      // modalVisible: false, // 모달의 표시 여부
     };
   },
   mounted() {
@@ -189,6 +171,12 @@ export default {
     },
     async deletePost(postId) {
       try {
+
+        // 확인 창을 표시하고 사용자가 "확인"을 선택했는지 확인합니다.
+    const confirmDelete = confirm('정말로 게시물을 삭제하시겠습니까?');
+    
+    if (confirmDelete) {
+
         const accessToken = localStorage.getItem('accessToken')
 
         const url = `http://localhost:8080/api/v1/posts/post/${postId}`;
@@ -203,21 +191,23 @@ export default {
         await this.axiosAdminPostList(this.selectedCategory);
         // 삭제 후 리스트 페이지로 리다이렉트
         this.$router.push('/admin/post/list');
+        return response;
+      }
       } catch (error) {
         console.error('게시물 삭제 실패:', error);
       }
     },
-     showModal(postId) {
-      this.postIdToDelete = postId; // postId 저장
-      this.modalVisible = true; // 모달 표시
-    },
-    hideModal() {
-      this.modalVisible = false; // 모달 숨김
-    },
-    deletePostAndHideModal() {
-      this.deletePost(this.postIdToDelete);
-      this.hideModal(); // 모달 숨김
-    },
+    //  showModal(postId) {
+    //   this.postIdToDelete = postId; // postId 저장
+    //   this.modalVisible = true; // 모달 표시
+    // },
+    // hideModal() {
+    //   this.modalVisible = false; // 모달 숨김
+    // },
+    // deletePostAndHideModal() {
+    //   this.deletePost(this.postIdToDelete);
+    //   this.hideModal(); // 모달 숨김
+    // },
 
     
     onMouseOver(event) {

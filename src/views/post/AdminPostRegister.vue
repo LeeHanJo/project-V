@@ -79,29 +79,11 @@
         <div class="col-md-8 offset-md-2 d-flex justify-content-center">
           <router-link to="/admin/post/list" class="btn btn-dark btn-primary me-2">목록으로</router-link>
   <!-- 저장하기 버튼에 savePost 메서드 연결 -->
-          <button type="button" class="btn btn-primary" @click="showModal">저장하기</button>
+          <button type="button" class="btn btn-primary" @click="savePostAndHideModal">저장하기</button>
         </div>
       </div>
     </div>
   </main>
-   <!-- 모달 -->
-    <div v-if="modalVisible" class="modal fade show" tabindex="-1" role="dialog" style="display: block; background-color: rgba(0, 0, 0, 0.5);">
-      <div class="modal-dialog" role="document">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title">게시물 등록</h5>
-            <button type="button" class="btn-close" aria-label="Close" @click="hideModal"></button>
-          </div>
-          <div class="modal-body">
-            <p>게시물을 등록하시겠습니까?</p>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" @click="hideModal">취소</button>
-            <button type="button" class="btn btn-primary" @click="savePostAndHideModal">등록</button>
-          </div>
-        </div>
-      </div>
-    </div>
 </template>
 
 <script>
@@ -130,7 +112,7 @@ export default {
     ],
       imageFile: [],
       previewImages: [], // 이미지 파일들의 미리보기 URL을 저장할 배열
-      modalVisible: false, // 모달의 표시 여부
+      // modalVisible: false, // 모달의 표시 여부
     }
   },
   mounted() {
@@ -274,23 +256,18 @@ export default {
       inputElement.files = fileList.files; // FileList를 인풋 요소의 files 속성에 설정
       this.$forceUpdate(); // 컴포넌트 강제 업데이트
     },
-
-    showModal() {
-      this.modalVisible = true; // 모달 표시
-    },
-    hideModal() {
-      this.modalVisible = false; // 모달 숨김
-    },
    async savePostAndHideModal() {
       try {
         // 필수 입력값 확인
     if (!this.postData.postTitle || !this.postData.postCategory || !this.postData.postRegisterDate || !this.postData.postContent) {
       alert('모든 필수 입력값을 입력해주세요.');
-      this.hideModal();
+      // this.hideModal();
       return; // 필수 입력값이 비어있으면 함수 종료
     }
-        const registerResponse = await this.savePost();
-        const postId = registerResponse.postId;
+        // 브라우저 기본 confirm 창 사용
+    if (confirm('게시물을 등록하시겠습니까?')) {
+      const registerResponse = await this.savePost();
+      const postId = registerResponse.postId;
 
          // 이미지가 있는 경우에만 이미지 업로드 함수를 실행합니다.
        if (this.imageFile && this.imageFile.length > 0) {
@@ -302,9 +279,9 @@ export default {
         alert('게시물이 등록되었습니다.');
         console.log('게시물 등록 완료:', response.data);
         // console.log('token :', accessToken)
-        this.hideModal();
         // 리스트 페이지로 이동
         // this.$router.push('/admin/post/list');
+      }
       } catch(error) {
     // 이미지 업로드 실패 이유가 없으면 콘솔에 오류를 출력하지 않음
     if (error.response) {
